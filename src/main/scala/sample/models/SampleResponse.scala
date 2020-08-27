@@ -6,5 +6,5 @@ import io.bullet.borer.derivation.MapBasedCodecs.deriveCodec
 case class SampleResponse(msg: String)
 
 object SampleResponse {
-  implicit val sampleResponseCodec: Codec[SampleResponse] = deriveCodec
+  implicit val sampleResponseCodec: Codec[SampleResponse] = deriveCodec // todo : create codecs file
 }

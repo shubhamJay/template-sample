@@ -23,7 +23,8 @@ object Libs {
   val `borer-compat-akka` = "io.bullet" %% "borer-compat-akka" % "1.6.1"
 
   //testing
-  val `scalatest`         = "org.scalatest"     %% "scalatest"         % "3.1.2"
-  val `akka-http-testkit` = "com.typesafe.akka" %% "akka-http-testkit" % "10.2.0"
-  val `mockito-scala`     = "org.mockito"       %% "mockito-scala"     % "1.14.8"
+  val `scalatest`                = "org.scalatest"     %% "scalatest"                % "3.1.2"
+  val `akka-http-testkit`        = "com.typesafe.akka" %% "akka-http-testkit"        % "10.2.0"
+  val `mockito-scala`            = "org.mockito"       %% "mockito-scala"            % "1.14.8"
+  val `akka-actor-testkit-typed` = "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.8"
 }

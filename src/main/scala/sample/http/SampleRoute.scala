@@ -10,14 +10,14 @@ import sample.core.SampleImpl
 class SampleRoute(sampleImpl: SampleImpl, securityDirectives: SecurityDirectives) extends AkkaHttpCompat {
   import sample.models.SampleResponse._
 
-  val route: Route = path("sayHello") {
-    complete(sampleImpl.sayHello())
-  }
-//  ~ {
-  //    securityDirectives.sGet(RealmRolePolicy("ESW-user")) { token =>
-  //      path("securedSayHello") {
-  //        complete(sampleImpl.securedSayHello())
-  //      }
-  //    }
-  //  }
+  val route: Route =
+    path("sayHello") {
+      complete(sampleImpl.sayHello())
+    } ~
+      path("securedSayHello") {
+        securityDirectives.sGet(RealmRolePolicy("Esw-user")) { token =>
+          complete(sampleImpl.securedSayHello())
+        }
+      }
+
 }
