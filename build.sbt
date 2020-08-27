@@ -8,7 +8,17 @@ resolvers += "jitpack" at "https://jitpack.io"
 resolvers += "bintray" at "https://jcenter.bintray.com"
 
 libraryDependencies ++= Seq(
+  Csw.`csw-aas-http`,
+  Csw.`csw-alarm-api`,
+  Csw.`csw-alarm-client`,
+  Csw.`csw-command-api`,
+  Csw.`csw-command-client`,
+  Csw.`csw-config-client`,
+  Csw.`csw-event-api`,
+  Csw.`csw-event-client`,
+  Csw.`csw-time-scheduler`,
   Libs.`esw-http-core`,
-  Libs.`csw-aas-http`,
-  Libs.`scalatest` % Test
+  Libs.`scalatest`         % Test,
+  Libs.`akka-http-testkit` % Test,
+  Libs.`mockito-scala`     % Test
 )

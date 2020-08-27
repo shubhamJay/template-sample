@@ -1,10 +1,8 @@
 package sample.core
 
-// todo: add sample model and (de)serialisation for it.
-case class Box(a: String)
+import sample.models.SampleResponse
 
 class SampleImpl {
-  def public()   = "Hello!!!"
-  def secured()  = "Secured Hello!!!"
-  def secured1() = Box("Secured Hello!!!")
+  def sayHello(): SampleResponse        = SampleResponse("Hello!!!")
+  def securedSayHello(): SampleResponse = SampleResponse("Secured Hello!!!")
 }
