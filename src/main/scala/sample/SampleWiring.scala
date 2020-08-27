@@ -34,7 +34,7 @@ class SampleWiring {
 
   lazy val securityDirectives: SecurityDirectives = SecurityDirectives(config, locationService)
   lazy val sampleImpl                             = new SampleImpl
-  lazy val routes: Route                          = new SampleRoute(sampleImpl, securityDirectives).routes
+  lazy val routes: Route                          = new SampleRoute(sampleImpl, securityDirectives).route
 
   lazy val service = new HttpService(logger, locationService, routes, settings, actorRuntime)
 
