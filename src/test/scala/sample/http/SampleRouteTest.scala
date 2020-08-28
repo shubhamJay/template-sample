@@ -27,8 +27,6 @@ class SampleRouteTest extends AnyWordSpec with ScalatestRouteTest with AkkaHttpC
 
   override protected def beforeEach(): Unit = reset(sampleImpl, securityDirectives)
 
-  import SampleResponse._
-
   "SampleRoute" must {
     "sayHello must delegate to sampleImpl.sayHello" in {
       val response = SampleResponse(Random.nextString(10))

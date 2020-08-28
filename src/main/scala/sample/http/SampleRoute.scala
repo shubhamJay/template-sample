@@ -8,7 +8,6 @@ import io.bullet.borer.compat.AkkaHttpCompat
 import sample.core.SampleImpl
 
 class SampleRoute(sampleImpl: SampleImpl, securityDirectives: SecurityDirectives) extends AkkaHttpCompat {
-  import sample.models.SampleResponse._
 
   val route: Route =
     path("sayHello") {
@@ -19,5 +18,4 @@ class SampleRoute(sampleImpl: SampleImpl, securityDirectives: SecurityDirectives
           complete(sampleImpl.securedSayHello())
         }
       }
-
 }
