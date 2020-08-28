@@ -13,6 +13,7 @@ object Csw {
   val `csw-alarm-api`      = Org %% "csw-alarm-api"      % Version
   val `csw-alarm-client`   = Org %% "csw-alarm-client"   % Version
   val `csw-time-scheduler` = Org %% "csw-time-scheduler" % Version
+  val `csw-testkit`        = Org %% "csw-testkit"        % Version
 }
 
 object Libs {
@@ -27,4 +28,5 @@ object Libs {
   val `akka-http-testkit`        = "com.typesafe.akka" %% "akka-http-testkit"        % "10.2.0"
   val `mockito-scala`            = "org.mockito"       %% "mockito-scala"            % "1.14.8"
   val `akka-actor-testkit-typed` = "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.8"
+  val `embedded-keycloak` = "com.github.tmtsoftware.embedded-keycloak" %% "embedded-keycloak" % "7fd5623"
 }

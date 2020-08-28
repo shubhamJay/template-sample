@@ -18,6 +18,8 @@ libraryDependencies ++= Seq(
   Csw.`csw-event-client`,
   Csw.`csw-time-scheduler`,
   Libs.`esw-http-core`,
+  Libs.`embedded-keycloak`        % Test,
+  Csw.`csw-testkit`               % Test,
   Libs.`scalatest`                % Test,
   Libs.`akka-http-testkit`        % Test,
   Libs.`mockito-scala`            % Test,
