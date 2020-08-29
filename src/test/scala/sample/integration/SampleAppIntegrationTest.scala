@@ -9,6 +9,7 @@ import csw.aas.core.commons.AASConnection
 import csw.location.api.models.Connection.HttpConnection
 import csw.location.api.models.HttpRegistration
 import csw.location.api.scaladsl.LocationService
+import csw.prefix.models.Prefix
 import csw.testkit.scaladsl.ScalaTestFrameworkTestKit
 import io.bullet.borer.compat.AkkaHttpCompat
 import org.scalatest.matchers.should.Matchers
@@ -31,7 +32,7 @@ class SampleAppIntegrationTest extends ScalaTestFrameworkTestKit with AnyWordSpe
   val locationService: LocationService = frameworkTestKit.frameworkWiring.locationService
   var keycloakHandle: StopHandle       = _
   val keycloakPort                     = 8081
-  val serverWiring                     = new SampleWiring()
+  val serverWiring                     = new SampleWiring(Some(8085), Some(Prefix("ESW.sample_app")))
   val httpConnection: HttpConnection   = serverWiring.settings.httpConnection
 
   protected override def beforeAll(): Unit = {

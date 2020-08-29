@@ -20,12 +20,11 @@ import sample.http.SampleRoute
 
 import scala.concurrent.Future
 
-class SampleWiring {
+class SampleWiring(port : Option[Int], prefix: Option[Prefix]) {
   lazy val actorSystem: ActorSystem[SpawnProtocol.Command] = ActorSystemFactory.remote(SpawnProtocol(), "sample-app")
   lazy val config: Config                                  = actorSystem.settings.config
   lazy val logger: Logger                                  = new ServiceLogger(settings.httpConnection).getLogger
-  // todo: fix port reading, subsystem and compoName
-  lazy val settings     = new Settings(Some(8085), Some(Prefix(ESW, "sample_app")), config, ComponentType.Service)
+  lazy val settings     = new Settings(port, prefix, config, ComponentType.Service)
   lazy val actorRuntime = new ActorRuntime(actorSystem)
   import actorRuntime.{ec, typedSystem}
 
