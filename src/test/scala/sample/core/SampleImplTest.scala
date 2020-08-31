@@ -2,7 +2,7 @@ package sample.core
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import sample.models.SampleResponse
+import sample.core.models.SampleResponse
 
 class SampleImplTest extends AnyWordSpec with Matchers {
 
@@ -17,5 +17,4 @@ class SampleImplTest extends AnyWordSpec with Matchers {
       sampleImpl.securedSayHello() should ===(SampleResponse("Secured Hello!!!"))
     }
   }
-
 }

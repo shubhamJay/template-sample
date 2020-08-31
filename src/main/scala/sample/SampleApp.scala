@@ -19,8 +19,7 @@ object SampleApp extends CommandApp[SampleCliCommand] {
 
   override def run(command: SampleCliCommand, remainingArgs: RemainingArgs): Unit =
     command match {
-      case StartCommand(port, prefixString) =>
-      start(port, prefixString)
+      case StartCommand(port, prefixString) => start(port, prefixString)
     }
 
   private def start(port: Option[Int], prefixString: Option[String]): Unit = {
@@ -35,11 +34,11 @@ object SampleApp extends CommandApp[SampleCliCommand] {
       actorRuntime.startLogging(progName, appVersion)
       logger.debug("starting sample-app")
       Await.result(wiring.start(), 10.seconds)
-      logger.info("sample app started")
+      logger.info("sample-app started") // add host and port
     }
     catch {
       case NonFatal(ex) =>
-      ex.printStackTrace()
+        ex.printStackTrace()
         logger.error("sample-app crashed")
         exit(1)
     }

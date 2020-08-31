@@ -12,11 +12,11 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import sample.core.SampleImpl
-import sample.models.SampleResponse
+import sample.core.models.SampleResponse
 
 import scala.util.Random
 
-class SampleRouteTest extends AnyWordSpec with ScalatestRouteTest with AkkaHttpCompat with BeforeAndAfterEach {
+class SampleRouteTest extends AnyWordSpec with ScalatestRouteTest with AkkaHttpCompat with BeforeAndAfterEach with HttpCodecs {
 
   private val sampleImpl: SampleImpl                 = mock[SampleImpl]
   private val securityDirectives: SecurityDirectives = mock[SecurityDirectives]

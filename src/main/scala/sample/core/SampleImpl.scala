@@ -1,6 +1,6 @@
 package sample.core
 
-import sample.models.SampleResponse
+import sample.core.models.SampleResponse
 
 class SampleImpl {
   def sayHello(): SampleResponse        = SampleResponse("Hello!!!")

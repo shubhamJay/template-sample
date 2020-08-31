@@ -12,7 +12,6 @@ import csw.location.api.scaladsl.RegistrationResult
 import csw.location.client.ActorSystemFactory
 import csw.logging.api.scaladsl.Logger
 import csw.prefix.models.Prefix
-import csw.prefix.models.Subsystem.ESW
 import esw.http.core.commons.ServiceLogger
 import esw.http.core.wiring.{ActorRuntime, HttpService, Settings}
 import sample.core.SampleImpl
@@ -20,12 +19,12 @@ import sample.http.SampleRoute
 
 import scala.concurrent.Future
 
-class SampleWiring(port : Option[Int], prefix: Option[Prefix]) {
+class SampleWiring(port: Option[Int], prefix: Option[Prefix]) {
   lazy val actorSystem: ActorSystem[SpawnProtocol.Command] = ActorSystemFactory.remote(SpawnProtocol(), "sample-app")
   lazy val config: Config                                  = actorSystem.settings.config
   lazy val logger: Logger                                  = new ServiceLogger(settings.httpConnection).getLogger
-  lazy val settings     = new Settings(port, prefix, config, ComponentType.Service)
-  lazy val actorRuntime = new ActorRuntime(actorSystem)
+  lazy val settings                                        = new Settings(port, prefix, config, ComponentType.Service)
+  lazy val actorRuntime                                    = new ActorRuntime(actorSystem)
   import actorRuntime.{ec, typedSystem}
 
   lazy val cswWiring = new CswWiring()

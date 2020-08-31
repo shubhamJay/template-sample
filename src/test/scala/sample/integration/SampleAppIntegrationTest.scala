@@ -18,12 +18,18 @@ import org.tmt.embedded_keycloak.KeycloakData.{ApplicationUser, Client, Realm}
 import org.tmt.embedded_keycloak.impl.StopHandle
 import org.tmt.embedded_keycloak.{EmbeddedKeycloak, KeycloakData, Settings}
 import sample.SampleWiring
-import sample.models.SampleResponse
+import sample.core.models.SampleResponse
+import sample.http.HttpCodecs
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContext}
 
-class SampleAppIntegrationTest extends ScalaTestFrameworkTestKit with AnyWordSpecLike with Matchers with AkkaHttpCompat {
+class SampleAppIntegrationTest
+    extends ScalaTestFrameworkTestKit
+    with AnyWordSpecLike
+    with Matchers
+    with AkkaHttpCompat
+    with HttpCodecs {
 
   implicit val actorSystem: ActorSystem[SpawnProtocol.Command] = frameworkTestKit.actorSystem
   implicit val ec: ExecutionContext                            = actorSystem.executionContext
@@ -48,15 +54,12 @@ class SampleAppIntegrationTest extends ScalaTestFrameworkTestKit with AnyWordSpe
     super.afterAll()
   }
   "SampleWiring" must {
-
     "start the sample app and register with location service" in {
       val resolvedLocation = locationService.resolve(httpConnection, 5.seconds).futureValue
       resolvedLocation.get.connection should ===(httpConnection)
-
     }
 
     "should call sayHello and return SampleResponse as a result" in {
-      import SampleResponse._
       val resolvedAppLocation = locationService.resolve(httpConnection, 5.seconds).futureValue
       val appUri              = Uri(resolvedAppLocation.get.uri.toString)
       val request             = HttpRequest(HttpMethods.GET, uri = appUri.withPath(Path / "sayHello"))

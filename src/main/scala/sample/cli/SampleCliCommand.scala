@@ -1,6 +1,6 @@
 package sample.cli
 
-import caseapp.{CommandName, HelpMessage}
+import caseapp.{CommandName, ExtraName, HelpMessage}
 
 sealed trait SampleCliCommand
 
@@ -8,8 +8,11 @@ object SampleCliCommand {
 
   @CommandName("start")
   final case class StartCommand(
-      @HelpMessage("port on which the app is to be started with prefix of the app")
+      @HelpMessage("port of the app")
+      @ExtraName("p")
       port: Option[Int],
-      prefix : Option[String]
+      @HelpMessage("prefix of app. For eg: tcs.sample_app, etc")
+      @ExtraName("s")
+      prefix: Option[String]
   ) extends SampleCliCommand
 }

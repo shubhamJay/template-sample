@@ -4,10 +4,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import csw.aas.http.AuthorizationPolicy.RealmRolePolicy
 import csw.aas.http.SecurityDirectives
-import io.bullet.borer.compat.AkkaHttpCompat
 import sample.core.SampleImpl
 
-class SampleRoute(sampleImpl: SampleImpl, securityDirectives: SecurityDirectives) extends AkkaHttpCompat {
+class SampleRoute(sampleImpl: SampleImpl, securityDirectives: SecurityDirectives) extends HttpCodecs {
 
   val route: Route =
     path("sayHello") {
