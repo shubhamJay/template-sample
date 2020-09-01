@@ -21,8 +21,7 @@ import org.tmt.embedded_keycloak.impl.StopHandle
 import org.tmt.embedded_keycloak.utils.BearerToken
 import org.tmt.embedded_keycloak.{EmbeddedKeycloak, KeycloakData, Settings}
 import sample.SampleWiring
-import sample.core.models.SampleResponse
-import sample.http.HttpCodecs
+import sample.http.{HttpCodecs, SampleResponse}
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContext}

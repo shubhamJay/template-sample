@@ -14,8 +14,8 @@ import csw.logging.api.scaladsl.Logger
 import csw.prefix.models.Prefix
 import esw.http.core.commons.ServiceLogger
 import esw.http.core.wiring.{ActorRuntime, HttpService, Settings}
-import sample.core.SampleImpl
-import sample.http.SampleRoute
+import sample.core.JSampleImpl
+import sample.http.{SampleImplWrapper, SampleRoute}
 
 import scala.concurrent.Future
 
@@ -31,8 +31,10 @@ class SampleWiring(port: Option[Int], prefix: Option[Prefix]) {
   import cswWiring.locationService
 
   lazy val securityDirectives: SecurityDirectives = SecurityDirectives(config, locationService)
-  lazy val sampleImpl                             = new SampleImpl
-  lazy val routes: Route                          = new SampleRoute(sampleImpl, securityDirectives).route
+  lazy val sampleImpl                             = new JSampleImpl(cswWiring)
+  lazy val sampleImplWrapper                      = new SampleImplWrapper(sampleImpl)
+
+  lazy val routes: Route = new SampleRoute(sampleImplWrapper, securityDirectives).route
 
   lazy val service = new HttpService(logger, locationService, routes, settings, actorRuntime)
 
