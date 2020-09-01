@@ -3,12 +3,14 @@ package sample.integration
 import akka.actor.typed.{ActorSystem, SpawnProtocol}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri.Path
-import akka.http.scaladsl.model.{HttpMethods, HttpRequest, StatusCode, Uri}
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import csw.aas.core.commons.AASConnection
 import csw.location.api.models.Connection.HttpConnection
 import csw.location.api.models.HttpRegistration
 import csw.location.api.scaladsl.LocationService
+import csw.network.utils.Networks
 import csw.prefix.models.Prefix
 import csw.testkit.scaladsl.ScalaTestFrameworkTestKit
 import io.bullet.borer.compat.AkkaHttpCompat
@@ -16,6 +18,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.tmt.embedded_keycloak.KeycloakData.{ApplicationUser, Client, Realm}
 import org.tmt.embedded_keycloak.impl.StopHandle
+import org.tmt.embedded_keycloak.utils.BearerToken
 import org.tmt.embedded_keycloak.{EmbeddedKeycloak, KeycloakData, Settings}
 import sample.SampleWiring
 import sample.core.models.SampleResponse
@@ -37,6 +40,7 @@ class SampleAppIntegrationTest
 
   val locationService: LocationService = frameworkTestKit.frameworkWiring.locationService
   var keycloakHandle: StopHandle       = _
+  val hostname: String                 = Networks().hostname
   val keycloakPort                     = 8081
   val serverWiring                     = new SampleWiring(Some(8085), Some(Prefix("ESW.sample_app")))
   val httpConnection: HttpConnection   = serverWiring.settings.httpConnection
@@ -62,15 +66,21 @@ class SampleAppIntegrationTest
     "should call sayHello and return SampleResponse as a result" in {
       val resolvedAppLocation = locationService.resolve(httpConnection, 5.seconds).futureValue
       val appUri              = Uri(resolvedAppLocation.get.uri.toString)
-      val request             = HttpRequest(HttpMethods.GET, uri = appUri.withPath(Path / "sayHello"))
-      val response            = Http().singleRequest(request).futureValue
+      val token               = getToken("admin", "password1")()
+      val request = HttpRequest(
+        HttpMethods.GET,
+        uri = appUri.withPath(Path / "securedSayHello"),
+        headers = token.map(x => Seq(Authorization(OAuth2BearerToken(x)))).getOrElse(Nil)
+      )
+
+      val response: HttpResponse = Http().singleRequest(request).futureValue
       response.status should ===(StatusCode.int2StatusCode(200))
-      println(Unmarshal(response).to[SampleResponse])
+      Unmarshal(response).to[SampleResponse].futureValue should ===(SampleResponse("Secured Hello!!!"))
     }
   }
 
   private def startAndRegisterKeycloak(port: Int): StopHandle = {
-    val AdminRole = "location-admin"
+    val eswUserRole = "Esw-user"
     val locationServerClient =
       Client(name = "tmt-frontend-app", clientType = "public", passwordGrantEnabled = true)
     val keycloakData = KeycloakData(
@@ -78,11 +88,11 @@ class SampleAppIntegrationTest
         Realm(
           name = "TMT",
           users = Set(
-            ApplicationUser("admin", "password1", realmRoles = Set(AdminRole)),
+            ApplicationUser("admin", "password1", realmRoles = Set(eswUserRole)),
             ApplicationUser("nonAdmin", "password2")
           ),
           clients = Set(locationServerClient),
-          realmRoles = Set(AdminRole)
+          realmRoles = Set(eswUserRole)
         )
       )
     )
@@ -90,6 +100,21 @@ class SampleAppIntegrationTest
     val stopHandle       = Await.result(embeddedKeycloak.startServer(), 1.minute)
     locationService.register(HttpRegistration(AASConnection.value, keycloakPort, "auth")).futureValue
     stopHandle
+  }
+
+  private def getToken(userName: String, password: String): () => Some[String] = { () =>
+    Some(
+      BearerToken
+        .fromServer(
+          realm = "TMT",
+          client = "tmt-frontend-app",
+          host = hostname,
+          port = keycloakPort,
+          username = userName,
+          password = password
+        )
+        .token
+    )
   }
 
 }

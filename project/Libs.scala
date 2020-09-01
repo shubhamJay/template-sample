@@ -13,6 +13,7 @@ object Csw {
   val `csw-alarm-api`      = Org %% "csw-alarm-api"      % Version
   val `csw-alarm-client`   = Org %% "csw-alarm-client"   % Version
   val `csw-time-scheduler` = Org %% "csw-time-scheduler" % Version
+  val `csw-network-utils`  = Org %% "csw-network-utils"  % Version
   val `csw-testkit`        = Org %% "csw-testkit"        % Version
 }
 
