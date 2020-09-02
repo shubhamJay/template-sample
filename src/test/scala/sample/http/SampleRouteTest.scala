@@ -12,16 +12,17 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import sample.core.SampleImpl
-import sample.core.models.SampleResponse
+import sample.core.models.{Person, SampleResponse}
 
+import scala.concurrent.Future
 import scala.util.Random
 
 class SampleRouteTest extends AnyWordSpec with ScalatestRouteTest with AkkaHttpCompat with BeforeAndAfterEach with HttpCodecs {
 
-  private val sampleImpl: SampleImpl                 = mock[SampleImpl]
+  private val sampleImpl: SampleImpl = mock[SampleImpl]
   private val securityDirectives: SecurityDirectives = mock[SecurityDirectives]
-  private val token: AccessToken                     = mock[AccessToken]
-  private val accessTokenDirective                   = BasicDirectives.extract(_ => token)
+  private val token: AccessToken = mock[AccessToken]
+  private val accessTokenDirective = BasicDirectives.extract(_ => token)
 
   private val route: Route = new SampleRoute(sampleImpl, securityDirectives).route
 
@@ -30,7 +31,7 @@ class SampleRouteTest extends AnyWordSpec with ScalatestRouteTest with AkkaHttpC
   "SampleRoute" must {
     "sayHello must delegate to sampleImpl.sayHello" in {
       val response = SampleResponse(Random.nextString(10))
-      when(sampleImpl.sayHello()).thenReturn(response)
+      when(sampleImpl.sayHello()).thenReturn(Future.successful(response))
 
       Get("/sayHello") ~> route ~> check {
         verify(sampleImpl).sayHello()
@@ -40,12 +41,12 @@ class SampleRouteTest extends AnyWordSpec with ScalatestRouteTest with AkkaHttpC
 
     "securedSayHello must check for ESw-user role and delegate to sampleImpl.securedSayHello" in {
       val response = SampleResponse(Random.nextString(10))
-      val policy   = RealmRolePolicy("Esw-user")
+      val policy = RealmRolePolicy("Esw-user")
       when(securityDirectives.sGet(policy)).thenReturn(accessTokenDirective)
-      when(sampleImpl.securedSayHello()).thenReturn(response)
+      when(sampleImpl.securedSayHello(Person("John"))).thenReturn(Future.successful(Some(response)))
 
       Get("/securedSayHello") ~> route ~> check {
-        verify(sampleImpl).securedSayHello()
+        verify(sampleImpl).securedSayHello(Person("John"))
         verify(securityDirectives).sGet(policy)
         responseAs[SampleResponse] should ===(response)
       }

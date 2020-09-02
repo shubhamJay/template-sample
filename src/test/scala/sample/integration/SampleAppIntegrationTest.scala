@@ -8,10 +8,9 @@ import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import csw.aas.core.commons.AASConnection
 import csw.location.api.models.Connection.HttpConnection
-import csw.location.api.models.HttpRegistration
+import csw.location.api.models.{HttpRegistration, Metadata}
 import csw.location.api.scaladsl.LocationService
 import csw.network.utils.Networks
-import csw.prefix.models.Prefix
 import csw.testkit.scaladsl.ScalaTestFrameworkTestKit
 import io.bullet.borer.compat.AkkaHttpCompat
 import org.scalatest.matchers.should.Matchers
@@ -28,35 +27,36 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContext}
 
 class SampleAppIntegrationTest
-    extends ScalaTestFrameworkTestKit
+  extends ScalaTestFrameworkTestKit
     with AnyWordSpecLike
     with Matchers
     with AkkaHttpCompat
     with HttpCodecs {
 
   implicit val actorSystem: ActorSystem[SpawnProtocol.Command] = frameworkTestKit.actorSystem
-  implicit val ec: ExecutionContext                            = actorSystem.executionContext
-  override implicit val patienceConfig: PatienceConfig         = PatienceConfig(10.seconds)
+  implicit val ec: ExecutionContext = actorSystem.executionContext
+  override implicit val patienceConfig: PatienceConfig = PatienceConfig(10.seconds)
 
   val locationService: LocationService = frameworkTestKit.frameworkWiring.locationService
-  var keycloakHandle: StopHandle       = _
-  val hostname: String                 = Networks().hostname
-  val keycloakPort                     = 8081
-  val serverWiring                     = new SampleWiring(Some(8085), Some(Prefix("ESW.sample_app")))
-  val httpConnection: HttpConnection   = serverWiring.settings.httpConnection
+  var keycloakHandle: StopHandle = _
+  val hostname: String = Networks().hostname
+  val keycloakPort = 8081
+  val sampleWiring = new SampleWiring(Some(8085))
+  val httpConnection: HttpConnection = sampleWiring.settings.httpConnection
 
   protected override def beforeAll(): Unit = {
     super.beforeAll()
     keycloakHandle = startAndRegisterKeycloak(keycloakPort)
-    serverWiring.start().futureValue
+    sampleWiring.start(Metadata.empty).futureValue
   }
 
   protected override def afterAll(): Unit = {
     keycloakHandle.stop()
     locationService.unregister(AASConnection.value)
-    serverWiring.stop().futureValue
+    sampleWiring.stop().futureValue
     super.afterAll()
   }
+
   "SampleWiring" must {
     "start the sample app and register with location service" in {
       val resolvedLocation = locationService.resolve(httpConnection, 5.seconds).futureValue
@@ -65,8 +65,8 @@ class SampleAppIntegrationTest
 
     "should call sayHello and return SampleResponse as a result" in {
       val resolvedAppLocation = locationService.resolve(httpConnection, 5.seconds).futureValue
-      val appUri              = Uri(resolvedAppLocation.get.uri.toString)
-      val token               = getToken("admin", "password1")()
+      val appUri = Uri(resolvedAppLocation.get.uri.toString)
+      val token = getToken("admin", "password1")()
       val request = HttpRequest(
         HttpMethods.GET,
         uri = appUri.withPath(Path / "securedSayHello"),
@@ -97,7 +97,7 @@ class SampleAppIntegrationTest
       )
     )
     val embeddedKeycloak = new EmbeddedKeycloak(keycloakData, Settings(port = port, printProcessLogs = false))
-    val stopHandle       = Await.result(embeddedKeycloak.startServer(), 1.minute)
+    val stopHandle = Await.result(embeddedKeycloak.startServer(), 1.minute)
     locationService.register(HttpRegistration(AASConnection.value, keycloakPort, "auth")).futureValue
     stopHandle
   }
