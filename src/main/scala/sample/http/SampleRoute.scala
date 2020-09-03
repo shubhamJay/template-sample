@@ -9,38 +9,40 @@ import csw.aas.http.AuthorizationPolicy.RealmRolePolicy
 import csw.aas.http.SecurityDirectives
 import io.bullet.borer.Json
 import sample.core.SampleImpl
-import sample.core.models.{Person, SampleResponse}
+import sample.core.models.Person
 
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.ExecutionContext
 
-class SampleRoute(sampleImpl: SampleImpl, securityDirectives: SecurityDirectives) extends HttpCodecs {
+class SampleRoute(sampleImpl: SampleImpl, securityDirectives: SecurityDirectives)(implicit ec: ExecutionContext)
+    extends HttpCodecs {
 
-  val route: Route =
-    path("sayHello") {
-      complete(sampleImpl.sayHello())
+  val route: Route = path("sayHello") {
+    complete(sampleImpl.sayHello())
+  } ~
+    path("securedSayHello") {
+      securityDirectives.sPost(RealmRolePolicy("Esw-user")) { token =>
+        entity(as[Person]) { person => complete(sampleImpl.securedSayHello(person)) }
+      }
     } ~
-      path("securedSayHello") {
-        securityDirectives.sPost(RealmRolePolicy("Esw-user")) { token =>
-          entity(as[Person]) { person => complete(sampleImpl.securedSayHello(person)) }
-        }
-      } ~
-      path("securedSayHello") {
-        securityDirectives.sGet(RealmRolePolicy("Esw-admin")) { token =>
-          complete(sampleImpl.locations())
-        }
-      } ~ path("greeter") {
+    path("securedSayHello") {
+      securityDirectives.sGet(RealmRolePolicy("Esw-admin")) { token =>
+        complete(sampleImpl.locations())
+      }
+    } ~
+    path("greeter") {
       handleWebSocketMessages(greeter)
+    } ~
+    path("getFile" / Segment) { name =>
+      getFromResource(s"$name")
     }
 
   def greeter: Flow[Message, Message, Any] = {
     Flow[Message].flatMapConcat {
       case message: Strict =>
-        val pe = Json.decode(message.text.getBytes()).to[Person].value
-        Source.tick(1.second, 1.seconds, TextMessage(Json.encode(SampleResponse(pe.name)).toUtf8String))
+        val person = Json.decode(message.text.getBytes()).to[Person].value
+        sampleImpl.sayHelloStream(person).map(s => TextMessage(Json.encode(s).toUtf8String))
       case _ =>
         Source.empty
     }
   }
 }
-
-
