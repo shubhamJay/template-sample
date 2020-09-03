@@ -27,22 +27,22 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContext}
 
 class SampleAppIntegrationTest
-  extends ScalaTestFrameworkTestKit
+    extends ScalaTestFrameworkTestKit
     with AnyWordSpecLike
     with Matchers
     with AkkaHttpCompat
     with HttpCodecs {
 
   implicit val actorSystem: ActorSystem[SpawnProtocol.Command] = frameworkTestKit.actorSystem
-  implicit val ec: ExecutionContext = actorSystem.executionContext
-  override implicit val patienceConfig: PatienceConfig = PatienceConfig(10.seconds)
+  implicit val ec: ExecutionContext                            = actorSystem.executionContext
+  override implicit val patienceConfig: PatienceConfig         = PatienceConfig(10.seconds)
 
   val locationService: LocationService = frameworkTestKit.frameworkWiring.locationService
-  var keycloakHandle: StopHandle = _
-  val hostname: String = Networks().hostname
-  val keycloakPort = 8081
-  val sampleWiring = new SampleWiring(Some(8085))
-  val httpConnection: HttpConnection = sampleWiring.settings.httpConnection
+  var keycloakHandle: StopHandle       = _
+  val hostname: String                 = Networks().hostname
+  val keycloakPort                     = 8081
+  val sampleWiring                     = new SampleWiring(Some(8085))
+  val httpConnection: HttpConnection   = sampleWiring.settings.httpConnection
 
   protected override def beforeAll(): Unit = {
     super.beforeAll()
@@ -65,8 +65,8 @@ class SampleAppIntegrationTest
 
     "should call sayHello and return SampleResponse as a result" in {
       val resolvedAppLocation = locationService.resolve(httpConnection, 5.seconds).futureValue
-      val appUri = Uri(resolvedAppLocation.get.uri.toString)
-      val token = getToken("admin", "password1")()
+      val appUri              = Uri(resolvedAppLocation.get.uri.toString)
+      val token               = getToken("admin", "password1")()
       val request = HttpRequest(
         HttpMethods.GET,
         uri = appUri.withPath(Path / "securedSayHello"),
@@ -97,7 +97,7 @@ class SampleAppIntegrationTest
       )
     )
     val embeddedKeycloak = new EmbeddedKeycloak(keycloakData, Settings(port = port, printProcessLogs = false))
-    val stopHandle = Await.result(embeddedKeycloak.startServer(), 1.minute)
+    val stopHandle       = Await.result(embeddedKeycloak.startServer(), 1.minute)
     locationService.register(HttpRegistration(AASConnection.value, keycloakPort, "auth")).futureValue
     stopHandle
   }
