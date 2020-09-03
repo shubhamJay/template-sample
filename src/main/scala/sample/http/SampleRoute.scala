@@ -24,7 +24,7 @@ class SampleRoute(sampleImpl: SampleImpl, securityDirectives: SecurityDirectives
         entity(as[Person]) { person => complete(sampleImpl.securedSayHello(person)) }
       }
     } ~
-    path("securedSayHello") {
+    path("locations") {
       securityDirectives.sGet(RealmRolePolicy("Esw-admin")) { token =>
         complete(sampleImpl.locations())
       }

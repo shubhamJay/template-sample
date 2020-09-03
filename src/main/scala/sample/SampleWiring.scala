@@ -11,9 +11,9 @@ class SampleWiring(val port: Option[Int]) extends ServerWiring {
   lazy val actorSystem: ActorSystem[SpawnProtocol.Command] =
     ActorSystemFactory.remote(SpawnProtocol(), "sample-actor-system") //TODO giterify actor system name
 
-  val jSampleImpl: JSampleImpl = new JSampleImpl(cswContext.asJava())
+  lazy val jSampleImpl: JSampleImpl = new JSampleImpl(cswContext.asJava())
+  lazy val sampleImpl               = new SampleImpl(jSampleImpl, cswContext)
 
-  lazy val sampleImpl = new SampleImpl(jSampleImpl, cswContext)
   import actorSystem.executionContext
   lazy val routes: Route = new SampleRoute(sampleImpl, securityDirectives).route
 }
