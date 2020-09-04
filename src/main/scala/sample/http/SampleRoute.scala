@@ -13,20 +13,24 @@ import sample.core.models.Person
 
 import scala.concurrent.ExecutionContext
 
-class SampleRoute(sampleImpl: SampleImpl, securityDirectives: SecurityDirectives)(implicit ec: ExecutionContext)
-    extends HttpCodecs {
+class SampleRoute(service1: SampleImpl, service2: JSampleImplWrapper, securityDirectives: SecurityDirectives)(implicit
+    ec: ExecutionContext
+) extends HttpCodecs {
 
   val route: Route = path("sayHello") {
-    complete(sampleImpl.sayHello())
+    complete(service1.sayHello())
   } ~
+    path("sayBye") {
+      complete(service2.sayBye())
+    } ~
     path("securedSayHello") {
       securityDirectives.sPost(RealmRolePolicy("Esw-user")) { token =>
-        entity(as[Person]) { person => complete(sampleImpl.securedSayHello(person)) }
+        entity(as[Person]) { person => complete(service1.securedSayHello(person)) }
       }
     } ~
     path("locations") {
       securityDirectives.sGet(RealmRolePolicy("Esw-admin")) { token =>
-        complete(sampleImpl.locations())
+        complete(service1.locations())
       }
     } ~
     path("greeter") {
@@ -40,7 +44,7 @@ class SampleRoute(sampleImpl: SampleImpl, securityDirectives: SecurityDirectives
     Flow[Message].flatMapConcat {
       case message: Strict =>
         val person = Json.decode(message.text.getBytes()).to[Person].value
-        sampleImpl.sayHelloStream(person).map(s => TextMessage(Json.encode(s).toUtf8String))
+        service1.sayHelloStream(person).map(s => TextMessage(Json.encode(s).toUtf8String))
       case _ =>
         Source.empty
     }

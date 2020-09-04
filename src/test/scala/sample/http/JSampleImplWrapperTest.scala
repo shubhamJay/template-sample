@@ -1,0 +1,26 @@
+package sample.http
+
+import java.util.concurrent.CompletableFuture
+
+import org.mockito.MockitoSugar.{mock, verify, when}
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import sample.core.JSampleImpl
+import sample.core.models.SampleResponse
+
+class JSampleImplWrapperTest extends AnyWordSpec with Matchers {
+
+  "SampleImplWrapper" must {
+    "delegate sayBye to JSampleImpl.sayBye" in {
+      val jSampleImpl       = mock[JSampleImpl]
+      val sampleResponse    = mock[SampleResponse]
+      val sampleImplWrapper = new JSampleImplWrapper(jSampleImpl)
+
+      when(jSampleImpl.sayBye()).thenReturn(CompletableFuture.completedFuture(sampleResponse))
+
+      sampleImplWrapper.sayBye().futureValue should ===(sampleResponse)
+      verify(jSampleImpl).sayBye()
+    }
+  }
+}

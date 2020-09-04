@@ -1,6 +1,6 @@
 package sample.core;
 
-import esw.http.template.wiring.JCswContext;
+import esw.http.template.wiring.JCswServices;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -14,7 +14,7 @@ public class JSampleImplTest extends JUnitSuite {
 
     @Test
     public void shouldCallBye() throws ExecutionException, InterruptedException {
-        JCswContext mock = Mockito.mock(JCswContext.class);
+        JCswServices mock = Mockito.mock(JCswServices.class);
         JSampleImpl jSample = new JSampleImpl(mock);
         SampleResponse sampleResponse = new SampleResponse("Bye!!!");
         Assert.assertThat(jSample.sayBye().get(), CoreMatchers.is(sampleResponse));

@@ -10,4 +10,6 @@ object TestHelper {
 
   def randomSubsystem: Subsystem = TestHelper.randomFrom(Subsystem.values.toList)
 
+  def randomString(size: Int): String = Random.alphanumeric.take(size).mkString
+
 }

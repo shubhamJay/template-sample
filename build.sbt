@@ -15,5 +15,6 @@ libraryDependencies ++= Seq(
   Libs.`scalatest`                % Test,
   Libs.`akka-http-testkit`        % Test,
   Libs.`mockito-scala`            % Test,
-  Libs.`akka-actor-testkit-typed` % Test
+  Libs.`akka-actor-testkit-typed` % Test,
+  Libs.`akka-stream-testkit`      % Test
 )
