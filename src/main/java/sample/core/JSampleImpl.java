@@ -16,5 +16,4 @@ public class JSampleImpl {
         return CompletableFuture.completedFuture(new SampleResponse("Bye!!!"));
     }
 
-
 }

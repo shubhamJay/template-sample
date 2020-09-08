@@ -1,6 +1,5 @@
 package sample.integration
 
-import akka.{Done, NotUsed}
 import akka.actor.typed.{ActorSystem, SpawnProtocol}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri.Path
@@ -18,6 +17,7 @@ import csw.prefix.models.Prefix
 import csw.prefix.models.Subsystem.{CSW, ESW}
 import csw.testkit.scaladsl.ScalaTestFrameworkTestKit
 import io.bullet.borer.Json
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.tmt.embedded_keycloak.KeycloakData.{ApplicationUser, Client, Realm}
@@ -29,8 +29,7 @@ import sample.core.models.{Person, SampleResponse}
 import sample.http.HttpCodecs
 
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.chaining.scalaUtilChainingOps
+import scala.concurrent.{Await, ExecutionContext}
 
 class SampleAppIntegrationTest extends ScalaTestFrameworkTestKit with AnyWordSpecLike with Matchers with HttpCodecs {
 
@@ -38,21 +37,23 @@ class SampleAppIntegrationTest extends ScalaTestFrameworkTestKit with AnyWordSpe
   implicit val ec: ExecutionContext                            = actorSystem.executionContext
   override implicit val patienceConfig: PatienceConfig         = PatienceConfig(10.seconds)
 
-  val locationService: LocationService       = frameworkTestKit.frameworkWiring.locationService
-  var keycloakHandle: StopHandle             = _
-  val hostname: String                       = Networks().hostname
-  val keycloakPort                           = 8081
-  val sampleAppPort                          = 8085
-  val sampleWiring                           = new SampleWiring(Some(sampleAppPort))
-  val httpConnection: HttpConnection         = sampleWiring.settings.httpConnection
-  var resolvedLocation: Option[HttpLocation] = _
-  var appUri: Uri                            = _
+  val locationService: LocationService = frameworkTestKit.frameworkWiring.locationService
+  val hostname: String                 = Networks().hostname
+  val keycloakPort                     = 8081
+  val sampleAppPort                    = 8085
+  val sampleWiring                     = new SampleWiring(Some(sampleAppPort))
+  val appConnection: HttpConnection    = sampleWiring.settings.httpConnection
+
+  var appLocation: HttpLocation  = _
+  var appUri: Uri                = _
+  var keycloakHandle: StopHandle = _
+
   protected override def beforeAll(): Unit = {
     super.beforeAll()
     keycloakHandle = startAndRegisterKeycloak(keycloakPort)
     sampleWiring.start(Metadata.empty).futureValue
-    resolvedLocation = locationService.resolve(httpConnection, 5.seconds).futureValue
-    appUri = Uri(resolvedLocation.get.uri.toString)
+    appLocation = locationService.resolve(appConnection, 5.seconds).futureValue.get
+    appUri = Uri(appLocation.uri.toString)
   }
 
   protected override def afterAll(): Unit = {
@@ -65,8 +66,8 @@ class SampleAppIntegrationTest extends ScalaTestFrameworkTestKit with AnyWordSpe
   "SampleWiring" must {
 
     "start the sample app and register with location service" in {
-      val resolvedLocation = locationService.resolve(httpConnection, 5.seconds).futureValue
-      resolvedLocation.get.connection should ===(httpConnection)
+      val resolvedLocation = locationService.resolve(appConnection, 5.seconds).futureValue
+      resolvedLocation.get.connection should ===(appConnection)
     }
 
     "should call sayHello and return SampleResponse as a result" in {
@@ -144,24 +145,40 @@ class SampleAppIntegrationTest extends ScalaTestFrameworkTestKit with AnyWordSpe
       Unmarshal(response).to[List[Location]].futureValue.map(_.prefix) should ===(List(aasPrefix, appPrefix))
     }
 
-//    "should call greeter and return stream response as a result" in {
-//      val request = WebSocketRequest(uri = s"ws://${hostname}:${sampleAppPort}/greeter")
-//
-//      val (connectionSink, connectionSource) =
-//        Source.asSubscriber[Message].mapMaterializedValue(Sink.fromSubscriber).preMaterialize()
-//
-//      val requestSource = Source.single(TextMessage.Strict(Json.encode(Person("sdaff")).toUtf8String)).concat(Source.maybe)
-//      val flow          = Flow.fromSinkAndSourceCoupled(connectionSink, requestSource)
-//      Http().singleWebSocketRequest(request, flow)
-//
-//      connectionSource.map {
-//        case msg: TextMessage.Strict =>
-//          val value1 = Json.decode(msg.text.getBytes()).to[SampleResponse].value
-//          value1.tap(println)
-//      }
-//      Thread.sleep(10000)
-//    }
+    "should call greeter and return stream response as a result" in {
+      val person    = Person("John")
+      val uri       = appLocation.uri
+      val wsRequest = WebSocketRequest(uri = s"ws://${uri.getHost}:${uri.getPort}/greeter")
+
+      val (connectionSink, connectionSource) =
+        Source.asSubscriber[Message].mapMaterializedValue(Sink.fromSubscriber).preMaterialize()
+
+      val requestSource = Source.single(TextMessage.Strict(encode(person))).concat(Source.maybe) // adding person request
+      val flow          = Flow.fromSinkAndSourceCoupled(connectionSink, requestSource)
+
+      Http().singleWebSocketRequest(wsRequest, flow) // send request
+
+      // collect responses
+      val (_, responsesF) = connectionSource
+        .take(3) // to limit the infinite source
+        .collect { case msg: TextMessage.Strict => decodeSampleRes(msg) }
+        .toMat(Sink.seq)(Keep.both)
+        .run()
+
+      // assert on response
+      val expectedRes = SampleResponse("Hello!!! " + person.name)
+      eventually(Timeout(1600.millis)) { // 3 msg with 500 millis interval
+        val responses = responsesF.futureValue
+        responses.size shouldBe 3
+        responses should ===(Seq.fill(3)(expectedRes))
+      }
+
+    }
   }
+
+  private def encode(person: Person) = Json.encode(person).toUtf8String
+
+  private def decodeSampleRes(msg: TextMessage.Strict) = Json.decode(msg.text.getBytes()).to[SampleResponse].value
 
   private def startAndRegisterKeycloak(port: Int): StopHandle = {
     val eswUserRole  = "Esw-user"

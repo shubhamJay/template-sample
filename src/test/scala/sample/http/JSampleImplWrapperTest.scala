@@ -14,9 +14,9 @@ class JSampleImplWrapperTest extends AnyWordSpec with Matchers {
   "SampleImplWrapper" must {
     "delegate sayBye to JSampleImpl.sayBye" in {
       val jSampleImpl       = mock[JSampleImpl]
-      val sampleResponse    = mock[SampleResponse]
       val sampleImplWrapper = new JSampleImplWrapper(jSampleImpl)
 
+      val sampleResponse = mock[SampleResponse]
       when(jSampleImpl.sayBye()).thenReturn(CompletableFuture.completedFuture(sampleResponse))
 
       sampleImplWrapper.sayBye().futureValue should ===(sampleResponse)

@@ -1,6 +1,5 @@
 package sample.http
 
-import akka.http.scaladsl.model.ws.TextMessage.Strict
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -42,11 +41,11 @@ class SampleRoute(service1: SampleImpl, service2: JSampleImplWrapper, securityDi
 
   def greeter: Flow[Message, Message, Any] = {
     Flow[Message].flatMapConcat {
-      case message: Strict =>
+      case message: TextMessage.Strict =>
         val person = Json.decode(message.text.getBytes()).to[Person].value
         service1.sayHelloStream(person).map(s => TextMessage(Json.encode(s).toUtf8String))
       case _ =>
-        Source.empty
+        Source.failed(new NotImplementedError("unhandled"))
     }
   }
 }

@@ -19,6 +19,6 @@ class SampleImpl(cswServices: CswServices) {
   def locations(): Future[List[Location]] = cswServices.locationService.list
 
   def sayHelloStream(person: Person): Source[SampleResponse, NotUsed] = {
-    Source.tick(1.seconds, 1.seconds, SampleResponse("Hello!!! " + person.name)).mapMaterializedValue(_ => NotUsed)
+    Source.tick(0.seconds, 500.millis, SampleResponse("Hello!!! " + person.name)).mapMaterializedValue(_ => NotUsed)
   }
 }
